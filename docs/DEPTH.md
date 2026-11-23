@@ -15,6 +15,7 @@
 | M5 覆盖合并 | 展开覆盖、待扫及缺证区间的证据 | `GET /api/coverage/{sample}` | `app/modules/m5_coverage/sweep.py` | `tests/test_coverage.py` |
 | M6 缺扫对账 | 查逐方向差额及全部判定记录 | `GET /api/reconcile/{sample}` | `app/modules/m6_reconcile/ledger.py` | `tests/test_reconcile.py` |
 | M7 工单凭证 | 重算、签收并下载冻结证据 | `POST /api/runs` | `app/modules/m7_archive/service.py` | `tests/test_archive.py` |
+| M8 修复工单 | 按方向与原因合成修复单、交班主阻塞原因与修复后重算复核 | `POST /api/repair/orders` | `app/modules/m8_repair/service.py` | `tests/test_repair.py` |
 
 ## 陷阱登记
 
@@ -31,3 +32,6 @@
 | TRAP-23 | 临界时刻恰好接触窗口 | 增加虚假交集 | 半开窗口边界 | `app/modules/m4_windows/intervals.py` | `tests/test_windows.py::test_half_open_contact_has_no_distance` |
 | TRAP-25 | 脏样例两作业窗口重叠 | 同段两次采信 | 时间窗口归并 | `app/modules/m4_windows/service.py` | `tests/test_windows.py::test_windows_unioned_without_doubling` |
 | TRAP-26 | 签收提交带陈旧摘要 | 签错快照 | 返回冲突 | `app/modules/m7_archive/service.py` | `tests/test_archive.py::test_signature_requires_current_digest` |
+| TRAP-27 | 同方向多原因异常混在一张单 | 影响里程重复累计、原因无法独立追溯 | 按方向+原因拆条目并对里程区间取并集，原始表行逐行冻结 | `app/modules/m8_repair/order.py` | `tests/test_repair.py::test_order_groups_by_direction_and_reason_with_traceable_evidence` |
+| TRAP-28 | 同批异常重跑或断点续跑 | 重复生成工单、覆盖已确认来源 | 工单与条目按内容寻址，SQLite 唯一约束只插缺失行，状态只前进 | `app/store.py` | `tests/test_repair.py::test_resume_keeps_confirmed_sources_and_never_overwrites` |
+| TRAP-29 | 修复未完成即提交核量 | 把未核结果当已核 | 全部条目修复后才受理，对修复批次重算且异常未消除即退回 | `app/modules/m8_repair/service.py` | `tests/test_repair.py::test_unfinished_repair_cannot_be_treated_as_verified` |
